@@ -7,51 +7,52 @@
 set -e
 
 install_torch() {
-    # Eliminamos lspci si no lo usas, nvidia-smi es más confiable aquí
+    echo "-- Installing PyTorch --"
     
-    # 1. NVIDIA
+    # 1. NVIDIA (works fine)
     if command -v nvidia-smi &> /dev/null && nvidia-smi -L &> /dev/null; then
-        # Extraemos versión de CUDA (ej: 12.1 -> 121)
+        echo "Nvidia card found. Installing CUDA version..."
         local nv_ver=$(nvidia-smi | grep -oP 'CUDA Version: \K[0-9]+\.[0-9]+' | sed 's/\.//' 2>/dev/null)
-        dynamic_torch "nvidia-smi" "cu" "130" "CUDA" "$nv_ver"
+        dynamic_torch "cu" "$CUDA_LATEST" "CUDA" "$nv_ver"
         return
     fi
 
-    # 2. AMD Radeon
+    # 2. AMD Radeon (untested)
     if [ -c /dev/kfd ] && [ -d /sys/class/kfd ]; then
+        echo "AMD card found. Installing ROCm version..."
         local am_ver=$(cat /opt/rocm/.info/version 2>/dev/null | cut -d'.' -f1,2)
-        dynamic_torch "rocminfo" "rocm" "6.4" "ROCm" "$am_ver"
+        dynamic_torch "rocm" "$ROCM_LATEST" "ROCm" "$am_ver"
         return
     fi
 
-    # 3. Intel ARC (Usualmente usa una URL fija /xpu)
+    # 3. Intel ARC (untested)
     if [ -d /sys/class/drm/renderD128 ]; then
         echo "Intel Arc detected. Installing XPU version..."
         pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/xpu
         return
     fi
 
-    echo "No high-performance GPU detected. Installing Default version..."
+    echo "No high-performance GPU detected. Installing PyTorch default version..."
     pip install torch torchvision torchaudio
 }
 
 dynamic_torch() {
-    local LIB_NAME=$1
-    local COMPLEMENT=$2
-    local LIB_DEFAULT_VERSION=$3
-    local REQUIREMENT=$4
-    local VERSION=$5
+    local COMPLEMENT=$1
+    local LIB_DEFAULT_VERSION=$2
+    local REQUIREMENT=$3
+    local VERSION=$4
 
-    # Fallback si VERSION está vacío
+    # Falling back to default if version did not worked
     [ -z "$VERSION" ] && VERSION=$LIB_DEFAULT_VERSION
 
     local BASE_WHL_URL="https://download.pytorch.org/whl/"
     echo "--- Checking PyTorch Repository: ${REQUIREMENT} ${VERSION} ---"
 
-    # Verificación purista con Python (Sintaxis corregida en una sola línea)
+    # Verify url
     if python3 -c "import urllib.request; urllib.request.urlopen('${BASE_WHL_URL}${COMPLEMENT}${VERSION}', timeout=5)" 2>/dev/null; then
         local FINAL_VERSION="${COMPLEMENT}${VERSION}"
         echo "Success: Found repository for ${REQUIREMENT} ${VERSION}"
+    # Installs default version
     else
         local FINAL_VERSION="${COMPLEMENT}${LIB_DEFAULT_VERSION}"
         echo "Warning: ${COMPLEMENT}${VERSION} not found. Falling back to ${REQUIREMENT} ${LIB_DEFAULT_VERSION}"
@@ -64,25 +65,31 @@ dynamic_torch() {
 if [ ! -d ".git" ]; then
     echo "--- FIRST BOOT DETECTED: STARTING SETUP ---"
     
-    # 1. Clone the repository
-    # If it fails, we remove the .git folder (if created) to allow a clean retry
+    # clone the repository
+    # if it fails, we remove the .git folder (if created) to allow a clean retry
     if ! git clone https://github.com/Comfy-Org/ComfyUI.git .; then
         echo "ERROR: Git clone failed. Cleaning up..."
         rm -rf .git
         exit 1
     fi
 
-    # 2. Create Virtual Environment
-    python13 -m venv venv
+    # create Virtual Environment
+    if python13 -m venv venv;then
+        echo "-- Creating virtual environment --"
+    else
+        echo "ERROR: Failed to create virtual environment. Cleaning up..."
+        rm -rf .git
+        exit 1
+    fi
     
-    # 3. Activate and Install dependencies
+    # activate and install dependencies
     source venv/bin/activate
     
-    #Update pip
+    #update pip
     pip install --upgrade pip
     
     
-    #install_torch
+    #install torch
     if install_torch; then
 
     
@@ -104,5 +111,4 @@ else
 fi
 
 # Launch the application
-echo "Starting application on port 8188..."
 exec python main.py --listen 0.0.0.0 --port 8188

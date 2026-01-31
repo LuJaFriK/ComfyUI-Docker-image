@@ -9,9 +9,17 @@ services:
     environment:
       - HOME=/app
       - COMFYUI_LISTEN=0.0.0.0
+      - CUDA_LATEST=130
+      - ROCM_LATEST=64
     volumes:
       - app_data:/app
-    restart: unless-stopped
+    
+    # AMD/Intel hardware mapping
+    devices:
+      - "/dev/dri:/dev/dri"
+      - "/dev/kfd:/dev/kfd"
+    
+    # NVIDIA hardware
     deploy:
       resources:
         reservations:
@@ -19,6 +27,8 @@ services:
             - driver: nvidia
               count: all
               capabilities: [gpu]
+    
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import socket; s = socket.socket(); s.connect(('localhost', 8188))"]
       interval: 30s
