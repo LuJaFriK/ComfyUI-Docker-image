@@ -7,7 +7,7 @@
 set -e
 
 install_torch() {
-    
+
     local gpu_info=$(lspci | grep -Ei 'vga|3d|display')
     
     # 1. NVIDIA

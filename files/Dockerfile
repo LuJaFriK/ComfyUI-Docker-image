@@ -9,8 +9,8 @@ ENV PYTHONUNBUFFERED=1
 
 # Install Python 13, venv, git, and AI-related system dependencies
 RUN apt-get update && apt-get install -y \
-    python13 \
-    python13-venv \
+    python3.13 \
+    python3.13-venv \
     git \
     libgl1-mesa-glx \
     libglib2.0-0 \
