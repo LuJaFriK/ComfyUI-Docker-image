@@ -1,0 +1,86 @@
+#WARNING this yaml has been written mostly by Gemini and corrected by an IT student, may not properly work
+
+# BASE PLATFORM (Extension)
+x-comfy-base: &comfy-base
+  build:
+    context: .
+  ports:
+    - "8188:8188"
+  volumes:
+    - data:/app
+  restart: unless-stopped
+  healthcheck:
+    test: ["CMD", "python", "-c", "import socket; s = socket.socket(); s.connect(('localhost', 8188))"]
+    interval: 30s
+    timeout: 10s
+
+services:
+  # --- CPU PROFILE ---
+  comfy-cpu:
+      <<: *comfy-base
+      container_name: ComfyUI_CPU
+      profiles: ["cpu"]
+      build:
+        context: .
+        args:
+          - GPU_PLATFORM=cpu
+      environment:
+        - GPU_TYPE=cpu
+  # --- NVIDIA PROFILE ---
+  comfy-nvidia:
+    <<: *comfy-base  # Hereda todo lo de la base
+    container_name: ComfyUI_NVD
+    profiles: ["nvidia"]
+    build:
+      context: .
+      args:
+        - GPU_PLATFORM=nvidia
+    environment:
+      - HOME=/app
+      - GPU_TYPE=nvidia
+      - CUDA_LATEST=130
+      - COMFYUI_LISTEN=0.0.0.0
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  # --- AMD PROFILE ---
+  comfy-amd:
+    <<: *comfy-base
+    container_name: ComfyUI_AMD
+    profiles: ["amd"]
+    build:
+      context: .
+      args:
+        - GPU_PLATFORM=amd
+    environment:
+      - HOME=/app
+      - GPU_TYPE=amd
+      - ROCM_LATEST=6.4
+      - COMFYUI_LISTEN=0.0.0.0
+    devices:
+      - /dev/dri:/dev/dri
+      - /dev/kfd:/dev/kfd
+
+  # --- INTEL PROFILE ---
+  comfy-intel:
+    <<: *comfy-base
+    container_name: ComfyUI_Intel
+    profiles: ["intel"]
+    build:
+      context: .
+      args:
+        - GPU_PLATFORM=intel
+    environment:
+      - HOME=/app
+      - GPU_TYPE=intel
+      - COMFYUI_LISTEN=0.0.0.0
+    devices:
+      - /dev/dri:/dev/dri
+
+volumes:
+  data:
