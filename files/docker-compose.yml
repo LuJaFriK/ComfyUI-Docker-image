@@ -1,0 +1,22 @@
+#WARNING this yaml has been written mostly by Gemini and corrected by an IT student, may not properly work
+
+services:
+  ai-app:
+    build: .
+    container_name: ComfyUI
+    ports:
+      - "8188:8188"
+    environment:
+      - HOME=/app
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - app_data:/app
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8188"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  app_data:
