@@ -1,6 +1,6 @@
 #WARNING this dockerfile has been written mostly by Gemini and corrected by an IT student, may not properly work
 
-# Debian 13 (Trixie)
+# Debian 13
 FROM debian:trixie-slim
 
 # Prevent interactive prompts and set Python behavior

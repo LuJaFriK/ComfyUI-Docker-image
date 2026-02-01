@@ -1,13 +1,39 @@
 #!/bin/bash
 
-
 #WARNING this script has been written mostly by Gemini and corrected by an IT student, may not properly work
-
 
 set -e
 
 install_torch() {
-    echo "-- Installing PyTorch for ${GPU_TYPE}--"
+    
+    custom_install() {
+        # Works properly with Nvidia cards
+        local COMPLEMENT=$1
+        local LIB_DEFAULT_VERSION=$2
+        local REQUIREMENT=$3
+        local VERSION=$4
+    
+        # Falling back to default if version did not worked
+        [ -z "$VERSION" ] && VERSION=$LIB_DEFAULT_VERSION
+    
+        local BASE_WHL_URL="https://download.pytorch.org/whl/"
+        echo "--- Checking PyTorch Repository: ${REQUIREMENT} ${VERSION} ---"
+    
+        # Verify url
+        if python3 -c "import urllib.request; urllib.request.urlopen('${BASE_WHL_URL}${COMPLEMENT}${VERSION}', timeout=5)" 2>/dev/null; then
+            local FINAL_VERSION="${COMPLEMENT}${VERSION}"
+            echo "Success: Found repository for ${REQUIREMENT} ${VERSION}"
+        # Installs default version
+        else
+            local FINAL_VERSION="${COMPLEMENT}${LIB_DEFAULT_VERSION}"
+            echo "Warning: ${COMPLEMENT}${VERSION} not found. Falling back to ${REQUIREMENT} ${LIB_DEFAULT_VERSION}"
+        fi
+    
+        pip install torch torchvision torchaudio --index-url "${BASE_WHL_URL}${FINAL_VERSION}"
+    }
+    
+    
+    echo "-- Installing PyTorch --"
 
     case "${GPU_TYPE}" in
         "nvidia")
@@ -40,31 +66,6 @@ install_torch() {
     esac
     
     return 1
-}
-
-custom_install() {
-    local COMPLEMENT=$1
-    local LIB_DEFAULT_VERSION=$2
-    local REQUIREMENT=$3
-    local VERSION=$4
-
-    # Falling back to default if version did not worked
-    [ -z "$VERSION" ] && VERSION=$LIB_DEFAULT_VERSION
-
-    local BASE_WHL_URL="https://download.pytorch.org/whl/"
-    echo "--- Checking PyTorch Repository: ${REQUIREMENT} ${VERSION} ---"
-
-    # Verify url
-    if python3 -c "import urllib.request; urllib.request.urlopen('${BASE_WHL_URL}${COMPLEMENT}${VERSION}', timeout=5)" 2>/dev/null; then
-        local FINAL_VERSION="${COMPLEMENT}${VERSION}"
-        echo "Success: Found repository for ${REQUIREMENT} ${VERSION}"
-    # Installs default version
-    else
-        local FINAL_VERSION="${COMPLEMENT}${LIB_DEFAULT_VERSION}"
-        echo "Warning: ${COMPLEMENT}${VERSION} not found. Falling back to ${REQUIREMENT} ${LIB_DEFAULT_VERSION}"
-    fi
-
-    pip install torch torchvision torchaudio --index-url "${BASE_WHL_URL}${FINAL_VERSION}"
 }
 
 # ATOMIC SETUP: Only runs if the code is not yet present

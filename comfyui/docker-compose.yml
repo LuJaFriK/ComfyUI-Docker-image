@@ -28,7 +28,7 @@ services:
         - GPU_TYPE=cpu
   # --- NVIDIA PROFILE ---
   comfy-nvidia:
-    <<: *comfy-base  # Hereda todo lo de la base
+    <<: *comfy-base
     container_name: ComfyUI_NVD
     profiles: ["nvidia"]
     build:
