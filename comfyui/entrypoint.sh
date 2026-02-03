@@ -100,7 +100,7 @@ if [ ! -d "venv" ]; then
     fi
 else
     # Subsequent boots
-    git pull origin main
+    git pull origin master
     source venv/bin/activate
 fi
 
