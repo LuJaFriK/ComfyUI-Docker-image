@@ -6,6 +6,7 @@ set -e
 
 install_torch() {
     
+    #Installs the corresponding version of torch or the default version if not found
     custom_install() {
         # Works properly with Nvidia cards
         local COMPLEMENT=$1
@@ -33,34 +34,32 @@ install_torch() {
     }
     
     
-    echo "-- Installing PyTorch --"
+    echo "-- Installing PyTorch (${GPU_TYPE})--"
 
     case "${GPU_TYPE}" in
-        "nvidia")
+        
+        "Nvidia")
             # Nvidia works fine
             if command -v nvidia-smi &> /dev/null && nvidia-smi -L &> /dev/null; then
-                echo "Nvidia card found. Installing CUDA version..."
                 local nv_ver=$(nvidia-smi | grep -oP 'CUDA Version: \K[0-9]+\.[0-9]+' | sed 's/\.//' 2>/dev/null)
                 custom_install "cu" "$CUDA_LATEST" "CUDA" "$nv_ver"
                 return
             fi
             ;;
-        "amd")
+        "AMD")
             if [ -c /dev/kfd ] && [ -d /sys/class/kfd ]; then
-                echo "AMD card found. Installing ROCm version..."
                 local am_ver=$(cat /opt/rocm/.info/version 2>/dev/null | cut -d'.' -f1,2)
                 custom_install "rocm" "$ROCM_LATEST" "ROCm" "$am_ver"
                 return
             fi
             ;;
-        "intel")
+        "Intel")
             if [ -d /sys/class/drm/renderD128 ]; then
-                echo "Intel Arc detected. Installing XPU version..."
                 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/xpu
                 return
             fi
             ;;
-        "cpu")
+        "CPU")
             pip install torch torchvision torchaudio
             ;;
     esac
@@ -68,24 +67,16 @@ install_torch() {
     return 1
 }
 
-# ATOMIC SETUP: Only runs if the code is not yet present
-if [ ! -d ".git" ]; then
-    echo "--- FIRST BOOT DETECTED: STARTING SETUP ---"
+# Runs setup if the environment is not yet present
+if [ ! -d "venv" ]; then
+    echo "--- STARTING SETUP ---"
     
-    # clone the repository
-    # if it fails, we remove the .git folder (if created) to allow a clean retry
-    if ! git clone https://github.com/Comfy-Org/ComfyUI.git .; then
-        echo "ERROR: Git clone failed. Cleaning up..."
-        rm -rf .git
-        exit 1
-    fi
-
+        
     # create Virtual Environment
-    if python13 -m venv venv;then
+    if python3.13 -m venv venv;then
         echo "-- Creating virtual environment --"
     else
-        echo "ERROR: Failed to create virtual environment. Cleaning up..."
-        rm -rf .git
+        echo "ERROR: Failed to create virtual environment."
         exit 1
     fi
     
@@ -104,16 +95,12 @@ if [ ! -d ".git" ]; then
             echo "Installing requirements.txt..."
             pip install -r requirements.txt
         fi
+        
         echo "--- SETUP COMPLETED SUCCESSFULLY ---"
-
-    else 
-        echo "FATAL: Installation failed. Cleaning up to allow retry..."
-        # Erase git to make a first boot again
-        rm -rf .git
-        exit 1
     fi
 else
-    # SUBSEQUENT BOOTS: Just activate the existing environment
+    # Subsequent boots
+    git pull origin main
     source venv/bin/activate
 fi
 

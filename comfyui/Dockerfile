@@ -17,14 +17,13 @@ RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Symbolic link for the script
-RUN ln -s /usr/bin/python3.13 /usr/bin/python13
-
 WORKDIR /app
 
 # Copy the entrypoint script
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+
+RUN git clone https://github.com/Comfy-Org/ComfyUI.git .
 
 # App port
 EXPOSE 8188

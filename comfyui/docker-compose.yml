@@ -25,7 +25,8 @@ services:
         args:
           - GPU_PLATFORM=cpu
       environment:
-        - GPU_TYPE=cpu
+        - GPU_TYPE=CPU
+
   # --- NVIDIA PROFILE ---
   comfy-nvidia:
     <<: *comfy-base
@@ -37,7 +38,7 @@ services:
         - GPU_PLATFORM=nvidia
     environment:
       - HOME=/app
-      - GPU_TYPE=nvidia
+      - GPU_TYPE=Nvidia
       - CUDA_LATEST=130
       - COMFYUI_LISTEN=0.0.0.0
     deploy:
@@ -59,7 +60,7 @@ services:
         - GPU_PLATFORM=amd
     environment:
       - HOME=/app
-      - GPU_TYPE=amd
+      - GPU_TYPE=AMD
       - ROCM_LATEST=6.4
       - COMFYUI_LISTEN=0.0.0.0
     devices:
@@ -77,7 +78,7 @@ services:
         - GPU_PLATFORM=intel
     environment:
       - HOME=/app
-      - GPU_TYPE=intel
+      - GPU_TYPE=Intel
       - COMFYUI_LISTEN=0.0.0.0
     devices:
       - /dev/dri:/dev/dri

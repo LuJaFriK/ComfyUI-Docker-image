@@ -1,9 +1,7 @@
 Cambios que hacen falta para que funcione correctamente:
 
--Arreglar el first boot {
-    -Si el first boot falla, borra el .git pero no borra el repositorio, así que al intentar descargarlo de nuevo, lanza un error.
-    
-    -Está pendiente ver si pytorch se instala correctamente en plataformas AMD e Intel
-    
-    -
-}
+-Arreglar el first boot.
+
+-Está pendiente ver si pytorch se instala correctamente en plataformas AMD e Intel.
+
+-Necesita tener una carpeta enlazada en home para poder guardar modelos y datos.
