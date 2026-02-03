@@ -8,7 +8,6 @@ x-comfy-base: &comfy-base
     - "8188:8188"
   volumes:
     - data:/app
-  restart: unless-stopped
   healthcheck:
     test: ["CMD", "python", "-c", "import socket; s = socket.socket(); s.connect(('localhost', 8188))"]
     interval: 30s

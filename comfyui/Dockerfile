@@ -1,5 +1,3 @@
-#WARNING this dockerfile has been written mostly by Gemini and corrected by an IT student, may not properly work
-
 # Debian 13
 FROM debian:trixie-slim
 
@@ -23,6 +21,7 @@ WORKDIR /app
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
+# clone comfyui repository
 RUN git clone https://github.com/Comfy-Org/ComfyUI.git .
 
 # App port

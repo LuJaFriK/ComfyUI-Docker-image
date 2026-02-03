@@ -1,7 +1,5 @@
 #!/bin/bash
 
-#WARNING this script has been written mostly by Gemini and corrected by an IT student, may not properly work
-
 set -e
 
 install_torch() {
@@ -77,6 +75,7 @@ if [ ! -d "venv" ]; then
         echo "-- Creating virtual environment --"
     else
         echo "ERROR: Failed to create virtual environment."
+        rm -rf venv
         exit 1
     fi
     
@@ -90,13 +89,14 @@ if [ ! -d "venv" ]; then
     #install torch
     if install_torch; then
 
-    
-        if [ -f "requirements.txt" ]; then
-            echo "Installing requirements.txt..."
-            pip install -r requirements.txt
-        fi
+        echo "Installing dependencies..."
+        pip install -r requirements.txt
         
         echo "--- SETUP COMPLETED SUCCESSFULLY ---"
+    else
+        echo "ERROR: Failed to install torch."
+        rm -rf venv
+        exit 1
     fi
 else
     # Subsequent boots
